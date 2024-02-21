@@ -1,9 +1,8 @@
 // 뉴스를 갖고 오는 함수.
-// const API_KEY = `1c373cb782eb496db82d499781dfdc42` // api키를 자주 사용하기 위해서 변수로 만든다.
+const API_KEY = `1c373cb782eb496db82d499781dfdc42` // api키를 자주 사용하기 위해서 변수로 만든다.
 let news = []
 const keyword = "아이유";
 const PAGE_SIZE = 20;
-const API_KEY = `http://times-node-env.eba-appvq3ef.ap-northeast-2.elasticbeanstalk.com/top-headlines`
 
 const getLatesNews = async () => {
     //url 주소를 가져오기
