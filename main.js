@@ -1,18 +1,95 @@
 // 뉴스를 갖고 오는 함수.
-//const API_KEY = `1c373cb782eb496db82d499781dfdc42` // api키를 자주 사용하기 위해서 변수로 만든다.
-let news = []
+const API_KEY = `1c373cb782eb496db82d499781dfdc42`
+let newsList = []
+let url = `https://newsapi.org/v2/top-headlines?country=kr&apiKey=${API_KEY}`
+const menus = document.querySelectorAll(".menus button")
 
-const getLatesNews = async () => {
-    //url 주소를 가져오기
-    let Keyword = "아이유"
-    let PAGE_SIZE = 20;
-    let PAGE = 1;
-    const url = new URL(`https://master--testnews90.netlify.app//top-headlines?q=${Keyword}&country=kr&pageSize=${PAGE_SIZE}&page=${PAGE}`) // 개발자 필요로 하는 함수를 제공해주는데, URL()함수를 만듬. url인스턴스라고 부름. url에 필요한 함수와 변수들을 제공. 새로운 URL인스턴스를 만들어준다.
-    const response = await fetch(url) // url을 호출할 수 있는 함수. pending: 보류중!! 대기 상태 그래서 await함수 사용.
-    // body 안에 있는, 우리가 보고 싶은 데이터는 JSON으로 뽑아줘야 한다. 어떻게 해야 하나?
-    const data = await response.json() // json은 파일 형식 중 하나다. 이미지하면 png, jpg 같은 것처럼. json은 일반 객체를 텍스트 타입화. 서버 통신을 할 때 json타입을 많이 사용한다. 객체 형식으로 주고 받기 좋은 형식이다. 
-    news = data.articles;
-    console.log("dddd", news) 
+menus.forEach(menu=>menu.addEventListener("click", (event)=>getNewsByCategory(event)))
+
+// 사이드 바
+const openNav = () => {
+    document.getElementById("mySidenav").style.width = "250px";
 };
 
-getLatesNews()
+const closeNav = () => {
+    document.getElementById("mySidenav").style.width = "0";
+};
+
+// 검색창
+
+const openSearchBox = () => {
+    let inputArea = document.getElementById("input-area");
+    if (inputArea.style.display === "inline") {
+    inputArea.style.display = "none";
+    } else {
+    inputArea.style.display = "inline";
+    }
+};
+
+// 중복되는거
+const getNews = async () => {
+    const response = await fetch(url)
+    const data = await response.json()
+    newsList = data.articles
+    render();
+}
+
+// 검색 키워드
+const getNewsByKeyword = async () => {
+    const keyword = document.getElementById("serach-input").value;
+    url = new URL(`https://newsapi.org/v2/top-headlines?country=kr&q=${keyword}&apiKey=${API_KEY}`);
+    getNews();
+
+};
+
+
+const getLatesNews = async () => {
+    url = new URL(`https://newsapi.org/v2/top-headlines?country=kr&apiKey=${API_KEY}`); 
+    getNews();
+};
+
+const getNewsByCategory = async (event) => {
+    const category = event.target.textContent.toLowerCase();
+    url = new URL(`https://newsapi.org/v2/top-headlines?country=kr&category=${category}&apiKey=${API_KEY}`);
+    
+    getNews();
+}
+
+const render = () => {
+    // 무엇을 보여줄 것인가?
+    const newsHTML = newsList.map(news => `<div class="row news">
+    <div class="col-lg-4">
+        <img class="news-img-size"
+        src="${news.urlToImage
+        || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqEWgS0uxxEYJ0PsOb2OgwyWvC0Gjp8NUdPw&usqp=CAU"}"
+        >
+    </div>
+    <div class="col-lg-8">
+        <h2>${news.title}</h2>
+        <p>
+            ${news.description == null || news.description == ""
+        ? "내용없음"
+        : news.description.length > 200
+        ? news.description.substring(0, 200) + "..."
+        : news.description
+        }
+        </p>
+        <div>
+            ${news.source.name || "no source"} ${moment(news.published_date).fromNow()} * ${news.publishedAt}
+            * ${news.author}
+        </div>
+    </div>
+</div>`)
+        .join('');
+    
+
+    // 어디에다 붙일 것인지?
+    document.getElementById("news-board").innerHTML = newsHTML
+}
+
+getLatesNews();
+
+// 1. 버튼들의 클릭 이벤트를 만들어준다.
+// 2. 카테고리별 뉴스 가져오기
+// 3. 그 뉴스를 보여주기.
+
