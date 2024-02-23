@@ -28,11 +28,26 @@ const openSearchBox = () => {
 
 // 중복되는거
 const getNews = async () => {
-    const response = await fetch(url)
-    const data = await response.json()
-    newsList = data.articles
-    render();
-}
+    //에러 핸들링 try-catch
+    try {
+        const response = await fetch(url)
+        const data = await response.json()
+        if (response.status === 200) {
+            // 검색해도 안나옴.
+            if (data.articles.length === 0) {
+                throw new Error("No result for this search")
+            }
+            newsList = data.articles
+            render();
+        } else {
+            throw new Error(data.message)
+        }
+    } catch (error) {
+        errorRender(error.message)
+    }
+    
+
+};
 
 // 검색 키워드
 const getNewsByKeyword = async () => {
@@ -68,10 +83,10 @@ const render = () => {
         <h2>${news.title}</h2>
         <p>
             ${news.description == null || news.description == ""
-        ? "내용없음"
-        : news.description.length > 200
-        ? news.description.substring(0, 200) + "..."
-        : news.description
+            ? "내용없음"
+            : news.description.length > 200
+                ? news.description.substring(0, 200) + "..."
+                : news.description
         }
         </p>
         <div>
@@ -85,7 +100,15 @@ const render = () => {
 
     // 어디에다 붙일 것인지?
     document.getElementById("news-board").innerHTML = newsHTML
-}
+};
+
+const errorRender = (errorMessage) => {
+    const errorHTML = `<div class="alert alert-danger" role="alert">
+    ${errorMessage}
+    </div>`
+
+    document.getElementById("news-board").innerHTML = errorHTML
+};
 
 getLatesNews();
 
