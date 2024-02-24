@@ -1,7 +1,7 @@
 // 뉴스를 갖고 오는 함수.
 const API_KEY = `1c373cb782eb496db82d499781dfdc42`
 let newsList = []
-let url = `https://newsapi.org/v2/top-headlines?country=kr&apiKey=${API_KEY}`
+let url = `https://newsapi.org/v2/top-headlines?country=kr&apiKey=${API_KEY}}`
 const menus = document.querySelectorAll(".menus button")
 
 menus.forEach(menu=>menu.addEventListener("click", (event)=>getNewsByCategory(event)))
@@ -26,19 +26,30 @@ const openSearchBox = () => {
     }
 };
 
+let totalResults = 0; // 왜하는거지? 데이터를 받기 위해서 하는건데
+let page = 1;
+const pageSize = 10; // 고정값으로
+const groupSize = 5; // 고정값으로
+
 // 중복되는거
 const getNews = async () => {
     //에러 핸들링 try-catch
     try {
-        const response = await fetch(url)
+        url.searchParams.set("page", page); // => $page = page
+        url.searchParams.set("pageSize", pageSize);
+
+        const response = await fetch(url);
         const data = await response.json()
+        console.log("ddd", data)
         if (response.status === 200) {
             // 검색해도 안나옴.
             if (data.articles.length === 0) {
                 throw new Error("No result for this search")
             }
-            newsList = data.articles
+            newsList = data.articles;
+            totalResults = data.totalResults // totalReulst에 데이터 받아주기.
             render();
+            paginationRender() // 페이지 나오게
         } else {
             throw new Error(data.message)
         }
@@ -90,7 +101,7 @@ const render = () => {
         }
         </p>
         <div>
-            ${news.source.name || "no source"} ${moment(news.published_date).fromNow()} * ${news.publishedAt}
+            ${news.source.name || "no source"} ${moment(news.published_date).fromNow()} * ${moment(news.publishedAt).fromNow()}
             * ${news.author}
         </div>
     </div>
@@ -110,6 +121,59 @@ const errorRender = (errorMessage) => {
     document.getElementById("news-board").innerHTML = errorHTML
 };
 
+//페이지 네이션 만들기
+
+const paginationRender = () => {
+    let paginationHTML = ``;
+    const totalPages = Math.ceil(totalResults / pageSize);
+    // pageGroup
+    const pageGroup = Math.ceil(page / groupSize);
+    // lastPage
+    let lastPage = pageGroup * groupSize;
+    // 마지막 페이지그룹이 그룹사이즈보다 작다? 마지막 페이지 = 토탈 페이지로
+    if (lastPage > totalPages) {
+        lastPage = totalPages;
+    }
+
+    // firstPage
+    let firstPage = lastPage - (groupSize - 1) <= 0 ? 1 : lastPage - (groupSize - 1);
+    
+    paginationHTML = `<li class="page-item" onclick="pageClick(1)">
+        <a class="page-link" href='#js-bottom'>&lt;&lt;</a>
+    </li>
+    <li class="page-item" onclick="pageClick(${page - 1})">
+        <a class="page-link" href='#js-bottom'>&lt;</a>
+    </li>`;
+
+    
+
+
+    for (let i = firstPage; i <= lastPage; i++) {
+        paginationHTML += `<li class="page-item ${i == page ? "active" : ""}" >
+        <a class="page-link" href='#js-bottom' id='page-${i}' onclick="pageClick(${i})">${i}</a>
+    </li>`
+
+    }
+
+
+    paginationHTML += `<<li class="page-item" onclick="pageClick(${page + 1})">
+    <a  class="page-link" href='#js-program-detail-bottom'>&gt;</a>
+    </li>
+    <li class="page-item" onclick="pageClick(${totalPages})">
+    <a class="page-link" href='#js-bottom'>&gt;&gt;</a>
+    </li>`;
+
+    
+    document.querySelector(".pagination").innerHTML = paginationHTML
+};
+
+const moveToPage = (pageNum) => {
+    console.log("movetopage", pageNum)
+    page = pageNum
+    getNews()
+}
+
+// 최근 뉴스 함수 호출
 getLatesNews();
 
 // 1. 버튼들의 클릭 이벤트를 만들어준다.
